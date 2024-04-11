@@ -339,6 +339,7 @@ pub fn syscall_pselect6(args: [usize; 6]) -> SyscallResult {
         if process
             .memory_set
             .lock()
+            .lock()
             .manual_alloc_type_for_lazy(timeout)
             .is_err()
         {

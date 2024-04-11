@@ -401,9 +401,6 @@ impl MemorySet {
             }
             None => {
                 error!("Page fault address {:?} not found in memory set ", addr);
-                // 如果不加 panic，此处会无限循环触发 page fault
-                // 这是由于 ZLM 第一阶段任务五的 clone3 实现不完善导致的，修复后需删掉这个 panic
-                panic!("FIXME: Page fault shouldn't cause a panic in kernel.");
                 Err(AxError::BadAddress)
             }
         }

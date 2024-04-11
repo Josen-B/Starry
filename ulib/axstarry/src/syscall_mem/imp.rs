@@ -65,6 +65,7 @@ pub fn syscall_mmap(args: [usize; 6]) -> SyscallResult {
         process
             .memory_set
             .lock()
+            .lock()
             .mmap(start.into(), len, prot.into(), fixed, None)
     } else {
         // file backend
@@ -90,6 +91,7 @@ pub fn syscall_mmap(args: [usize; 6]) -> SyscallResult {
         process
             .memory_set
             .lock()
+            .lock()
             .mmap(start.into(), len, prot.into(), fixed, Some(backend))
     };
 
@@ -106,7 +108,7 @@ pub fn syscall_munmap(args: [usize; 6]) -> SyscallResult {
     let start = args[0];
     let len = args[1];
     let process = current_process();
-    process.memory_set.lock().munmap(start.into(), len);
+    process.memory_set.lock().lock().munmap(start.into(), len);
     flush_tlb(None);
     Ok(0)
 }
@@ -118,7 +120,7 @@ pub fn syscall_msync(args: [usize; 6]) -> SyscallResult {
     let start = args[0];
     let len = args[1];
     let process = current_process();
-    process.memory_set.lock().msync(start.into(), len);
+    process.memory_set.lock().lock().msync(start.into(), len);
 
     Ok(0)
 }
@@ -135,6 +137,7 @@ pub fn syscall_mprotect(args: [usize; 6]) -> SyscallResult {
 
     process
         .memory_set
+        .lock()
         .lock()
         .mprotect(VirtAddr::from(start), len, prot.into());
 
@@ -182,6 +185,7 @@ pub fn syscall_shmget(args: [usize; 6]) -> SyscallResult {
 
         current_process()
             .memory_set
+            .lock()
             .lock()
             .add_private_shared_mem(shmid, mem);
 
@@ -235,7 +239,8 @@ pub fn syscall_shmat(args: [usize; 6]) -> SyscallResult {
     let flags = args[2] as i32;
     let process = current_process();
 
-    let mut memory = process.memory_set.lock();
+    let memory_set_wrapper = process.memory_set.lock();
+    let mut memory = memory_set_wrapper.lock();
 
     let flags = ShmAtFlags::from_bits(flags).unwrap();
 

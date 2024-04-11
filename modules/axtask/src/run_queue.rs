@@ -270,7 +270,7 @@ impl AxRunQueue {
             assert!(Arc::strong_count(&next_task) >= 1);
             #[cfg(feature = "monolithic")]
             {
-                let page_table_token = next_task.page_table_token;
+                let page_table_token = *next_task.page_table_token.get();
                 if page_table_token != 0 {
                     axhal::arch::write_page_table_root0(page_table_token.into());
                 }

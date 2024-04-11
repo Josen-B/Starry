@@ -12,7 +12,7 @@ use axprocess::{
     link::{deal_with_path, raw_ptr_to_ref_str, AT_FDCWD},
     set_child_tid, sleep_now_task, wait_pid, yield_now_task, Process, PID2PC,
 };
-
+use axsync::Mutex;
 // use axtask::{
 //     monolithic_task::task::{SchedPolicy, SchedStatus},
 //     AxTaskRef,
@@ -493,7 +493,7 @@ pub fn syscall_setsid() -> SyscallResult {
     let new_process = Process::new(
         TaskId::new().as_u64(),
         process.get_parent(),
-        process.memory_set.clone(),
+        Mutex::new(process.memory_set.lock().clone()),
         process.get_heap_bottom(),
         process.fd_manager.fd_table.lock().clone(),
     );

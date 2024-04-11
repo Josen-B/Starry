@@ -36,7 +36,7 @@ pub fn init_kernel_process() {
     let kernel_process = Arc::new(Process::new(
         TaskId::new().as_u64(),
         0,
-        Arc::new(Mutex::new(MemorySet::new_empty())),
+        Mutex::new(Arc::new(Mutex::new(MemorySet::new_empty()))),
         0,
         vec![],
     ));
@@ -276,11 +276,12 @@ pub fn handle_page_fault(addr: VirtAddr, flags: MappingFlags) {
     let current_process = current_process();
     axlog::debug!(
         "memory token : {:#x}",
-        current_process.memory_set.lock().page_table_token()
+        current_process.memory_set.lock().lock().page_table_token()
     );
 
     if current_process
         .memory_set
+        .lock()
         .lock()
         .handle_page_fault(addr, flags)
         .is_ok()

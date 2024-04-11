@@ -86,6 +86,8 @@ pub fn task_syscall(syscall_id: task_syscall_id::TaskSyscallId, args: [usize; 6]
         ALARM => Ok(0),
         #[cfg(target_arch = "x86_64")]
         RSEQ => Ok(0),
+        #[cfg(target_arch = "x86_64")]
+        TIME => Ok(0),
         #[allow(unused)]
         _ => {
             panic!("Invalid Syscall Id: {:?}!", syscall_id);

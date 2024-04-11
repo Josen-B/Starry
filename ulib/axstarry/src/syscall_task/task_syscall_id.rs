@@ -86,6 +86,7 @@ numeric_enum_macro::numeric_enum! {
         SETITIMER = 38,
         CLOCK_GETRES = 229,
         CLOCK_NANOSLEEP = 230,
+        TIME = 201,
         SYSLOG = 103,
         SCHED_SETSCHEDULER = 144,
         SCHED_GETSCHEDULER = 145,

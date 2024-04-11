@@ -138,7 +138,7 @@ pub struct TaskInner {
 
     #[cfg(feature = "monolithic")]
     /// the page table token of the process which the task belongs to
-    pub page_table_token: usize,
+    pub page_table_token: UnsafeCell<usize>,
 
     #[cfg(feature = "monolithic")]
     set_child_tid: AtomicU64,
@@ -275,7 +275,15 @@ impl TaskInner {
     #[inline]
     /// get the page table token of the process which the task belongs to
     pub fn get_page_table_token(&self) -> usize {
-        self.page_table_token
+        unsafe { *self.page_table_token.get() }
+    }
+
+    #[inline]
+    /// force to set the page table token of the process UNSAFELY
+    pub fn set_page_table_token(&self, token: usize) {
+        unsafe {
+            *self.page_table_token.get() = token;
+        }
     }
 
     #[inline]
@@ -500,7 +508,7 @@ impl TaskInner {
             trap_frame: UnsafeCell::new(TrapFrame::default()),
 
             #[cfg(feature = "monolithic")]
-            page_table_token: 0,
+            page_table_token: UnsafeCell::new(0),
 
             #[cfg(feature = "monolithic")]
             set_child_tid: AtomicU64::new(0),
@@ -552,7 +560,7 @@ impl TaskInner {
         {
             t.process_id.store(process_id, Ordering::Release);
 
-            t.page_table_token = page_table_token;
+            t.page_table_token = UnsafeCell::new(page_table_token);
 
             // 需要修改ctx存储的栈地址，否则内核trap上下文会被修改
             t.ctx.get_mut().init(
