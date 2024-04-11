@@ -63,13 +63,16 @@ pub fn println(s: &str) {
 }
 
 /// To read a file with the given path
-pub fn read_file(_path: &str) -> Option<String> {
-    #[cfg(feature = "syscall_fs")]
-    {
-        axfs::api::read_to_string(_path).ok()
-    }
-    #[cfg(not(feature = "syscall_fs"))]
-    {
-        None
-    }
+pub fn read_file(path: &str) -> Option<String> {
+    axfs::api::read_to_string(path).ok()
+}
+
+/// Write a slice as the entire contents of a file.
+pub fn write<C: AsRef<[u8]>>(path: &str, contents: C) -> Option<()> {
+    axfs::api::write(path, contents).ok()
+}
+
+/// Creates a new, empty directory at the provided path.
+pub fn create_dir(path: &str) -> Option<()> {
+    axfs::api::create_dir(path).ok()
 }

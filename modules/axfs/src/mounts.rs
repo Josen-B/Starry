@@ -102,5 +102,19 @@ pub(crate) fn sysfs() -> VfsResult<Arc<fs::ramfs::RamFileSystem>> {
         .lookup("devices/system/clocksource/clocksource0/current_clocksource")?;
     file_cc.write_at(0, b"tsc\n")?;
 
+    // create /sys/devices/system/cpu/online
+    sys_root.create("devices/system/cpu", VfsNodeType::Dir)?;
+    sys_root.create("devices/system/cpu/online", VfsNodeType::File)?;
+    let cpu_online = sys_root.clone().lookup("devices/system/cpu/online")?;
+    let smp = axconfig::SMP;
+    cpu_online.write_at(0, alloc::format!("0-{}", smp - 1).as_bytes())?;
+    for cpu_id in 0..smp {
+        let path = alloc::format!("devices/system/cpu/cpu{}", cpu_id);
+        sys_root.create(path.as_str(), VfsNodeType::Dir)?;
+        let path = path + "/online";
+        sys_root.create(path.as_str(), VfsNodeType::File)?;
+        let file = sys_root.clone().lookup(path.as_str())?;
+        file.write_at(0, b"1")?;
+    }
     Ok(Arc::new(sysfs))
 }

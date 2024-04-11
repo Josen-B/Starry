@@ -275,7 +275,10 @@ pub fn create_link(src_path: &FilePath, dest_path: &FilePath) -> bool {
     }
 
     // 创建新链接
-    map.insert(src_path.path().to_string(), dest_path.path().to_string().clone());
+    map.insert(
+        src_path.path().to_string(),
+        dest_path.path().to_string().clone(),
+    );
 
     // 更新链接计数
     let mut count_map = LINK_COUNT_MAP.lock();

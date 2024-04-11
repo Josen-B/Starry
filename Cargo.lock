@@ -320,6 +320,7 @@ dependencies = [
 name = "axfs"
 version = "0.1.0"
 dependencies = [
+ "axconfig",
  "axdriver",
  "axerrno",
  "axfs_devfs",
