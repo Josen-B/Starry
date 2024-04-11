@@ -50,7 +50,6 @@ pub fn syscall_read(args: [usize; 6]) -> SyscallResult {
     };
 
     if file.get_type() == FileIOType::DirDesc {
-        axlog::error!("fd is a dir");
         return Err(SyscallError::EISDIR);
     }
     if !file.readable() {
@@ -365,7 +364,7 @@ pub fn syscall_openat(args: [usize; 6]) -> SyscallResult {
     // 分配 inode
     new_inode(path.path().to_string()).unwrap();
     // 如果是DIR
-    info!("path: {:?}", path.path());
+    debug!("path: {:?}", path.path());
     if path.is_dir() {
         debug!("open dir");
         if let Ok(dir) = new_dir(path.path().to_string(), flags.into()) {
@@ -568,8 +567,8 @@ pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
     {
         return Err(SyscallError::EFAULT);
     }
-
     let path = deal_with_path(dir_fd, Some(path), false);
+
     if path.is_none() {
         return Err(SyscallError::ENOENT);
     }
@@ -593,8 +592,7 @@ pub fn syscall_readlinkat(args: [usize; 6]) -> SyscallResult {
 
         return Ok(file_real_path.len() as isize);
     }
-
-    if *path.path() != real_path(&(path.path().to_string())) {
+    if path.path().to_string() != real_path(&(path.path().to_string())) {
         // 说明链接存在
         let path = path.path();
         let len = bufsiz.min(path.len());

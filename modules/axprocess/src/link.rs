@@ -30,10 +30,11 @@ impl FilePath {
             // 如果原始路径以 '/' 结尾，那么canonicalize后的路径也应该以 '/' 结尾
             new_path.push('/');
         }
-        let new_path = real_path(&new_path);
+        // let new_path = real_path(&new_path);
         // assert!(!path.ends_with("/"), "path should not end with '/', link only support file");      // 链接只支持文件
         Ok(Self(new_path))
     }
+
     /// 获取路径
     pub fn path(&self) -> &str {
         &self.0
@@ -157,7 +158,10 @@ pub fn real_path(src_path: &String) -> String {
     let map = LINK_PATH_MAP.lock();
     // 找到对应的链接
     match map.get(src_path) {
-        Some(dest_path) => dest_path.clone(),
+        Some(dest_path) => {
+            // error!("src_path: {}, dest_path: {}", src_path, dest_path);
+            dest_path.clone()
+        }
         None => {
             // 特判gcc的文件夹链接情况，即将一个文件夹前缀换成另一个文件夹前缀
             static GCC_DIR_SRC: &str =
@@ -252,19 +256,28 @@ pub fn create_link(src_path: &FilePath, dest_path: &FilePath) -> bool {
         debug!("link dest file not exists");
         return false;
     }
+
+    // 一次性锁定LINK_PATH_MAP，避免重复加锁解锁
     let mut map = LINK_PATH_MAP.lock();
-    // 如果需要连接的文件已经存在
+
+    // 检查链接是否已存在，并处理旧链接
     if let Some(old_dest_path) = map.get(&src_path.path().to_string()) {
-        // 如果不是当前链接，那么删除旧链接; 否则不做任何事
-        if old_dest_path.eq(&dest_path.path().to_string()) {
+        if old_dest_path != &dest_path.path().to_string() {
+            // 旧链接存在且与新链接不同，移除旧链接
+            drop(map); // 释放锁，因为remove_link可能需要锁
+            remove_link(src_path);
+            map = LINK_PATH_MAP.lock(); // 重新获取锁
+        } else {
+            // 链接已存在且相同，无需进一步操作
             debug!("link already exists");
             return true;
         }
-        remove_link(src_path);
     }
-    // 创建链接
-    map.insert(src_path.path().to_string(), dest_path.path().to_string());
-    // 更新链接数
+
+    // 创建新链接
+    map.insert(src_path.path().to_string(), dest_path.path().to_string().clone());
+
+    // 更新链接计数
     let mut count_map = LINK_COUNT_MAP.lock();
     let count = count_map.entry(dest_path.path().to_string()).or_insert(0);
     *count += 1;
@@ -352,6 +365,7 @@ pub fn deal_with_path(
             }
         }
     }
+    path = real_path(&path);
     if force_dir && !path.ends_with('/') {
         path = format!("{}/", path);
     }

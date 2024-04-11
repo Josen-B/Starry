@@ -106,6 +106,11 @@ pub fn fs_init() {
         );
     }
 
+    // 时区信息的链接 /etc/localtime
+    create_link(
+        &(FilePath::new("/etc/localtime").unwrap()),
+        &(FilePath::new("/usr/share/zoneinfo/Asia/Shanghai").unwrap()),
+    );
     // create the file for the lmbench testcase
     let _ = new_file("/lat_sig", &(FileFlags::CREATE | FileFlags::RDWR));
 

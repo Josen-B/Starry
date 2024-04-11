@@ -1,5 +1,5 @@
 use crate::{deal_result, SyscallResult};
-use axlog::info;
+use axlog::error;
 
 #[no_mangle]
 pub fn syscall(syscall_id: usize, args: [usize; 6]) -> isize {
@@ -9,7 +9,7 @@ pub fn syscall(syscall_id: usize, args: [usize; 6]) -> isize {
     let mut ans: Option<SyscallResult> = None;
 
     if let Ok(net_syscall_id) = crate::syscall_net::NetSyscallId::try_from(syscall_id) {
-        info!(
+        error!(
             "[syscall] id = {:#?}, args = {:?}, entry",
             net_syscall_id, args
         );
@@ -19,7 +19,7 @@ pub fn syscall(syscall_id: usize, args: [usize; 6]) -> isize {
     }
 
     if let Ok(mem_syscall_id) = crate::syscall_mem::MemSyscallId::try_from(syscall_id) {
-        info!(
+        error!(
             "[syscall] id = {:#?}, args = {:?}, entry",
             mem_syscall_id, args
         );
@@ -28,7 +28,7 @@ pub fn syscall(syscall_id: usize, args: [usize; 6]) -> isize {
     }
 
     if let Ok(fs_syscall_id) = crate::syscall_fs::FsSyscallId::try_from(syscall_id) {
-        info!(
+        error!(
             "[syscall] id = {:#?}, args = {:?}, entry",
             fs_syscall_id, args
         );
@@ -37,7 +37,7 @@ pub fn syscall(syscall_id: usize, args: [usize; 6]) -> isize {
     }
 
     if let Ok(task_syscall_id) = crate::syscall_task::TaskSyscallId::try_from(syscall_id) {
-        info!(
+        error!(
             "[syscall] id = {:#?}, args = {:?}, entry",
             task_syscall_id, args
         );
@@ -50,7 +50,7 @@ pub fn syscall(syscall_id: usize, args: [usize; 6]) -> isize {
     }
     let ans = deal_result(ans.unwrap());
     if syscall_id != 96 && syscall_id != 98 {
-        info!(
+        error!(
             "[syscall] id = {}, args = {:?}, return {}",
             syscall_id, args, ans
         );
