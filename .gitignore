@@ -9,6 +9,8 @@ rusty-tags.vi
 /testcases/riscv64-linux-musl-native.tgz
 /testcases/gcc/riscv64-linux-musl-native
 /testcases/ZLM/MediaServer
+/testcases/ZLM/ffmpeg
+/testcases/ZLM/lib
 testsuits-x86_64-linux-musl.tgz
 .idea/
 arceos-fada.bin.gz

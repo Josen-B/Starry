@@ -22,6 +22,8 @@ pub fn mem_syscall(syscall_id: mem_syscall_id::MemSyscallId, args: [usize; 6]) -
         SHMGET => syscall_shmget(args),
         SHMCTL => Ok(0),
         SHMAT => syscall_shmat(args),
+        #[cfg(target_arch = "x86_64")]
+        MLOCK => syscall_mlock(args),
         #[allow(unused)]
         _ => {
             panic!("Invalid Syscall Id: {:?}!", syscall_id);

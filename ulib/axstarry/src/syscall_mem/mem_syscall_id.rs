@@ -44,5 +44,6 @@ numeric_enum_macro::numeric_enum! {
         MSYNC = 26,
         MPROTECT = 10,
         MEMBARRIER = 324,
+        MLOCK = 149,
     }
 }
