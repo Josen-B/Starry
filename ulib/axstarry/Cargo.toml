@@ -43,7 +43,7 @@ bus-pci = ["axfeat/bus-pci"]
 # Fs
 fd = []
 fs = ["axruntime/fs", "arceos_api/fs", "fd"]
-fatfs = ["axfeat/fatfs"]
+fatfs = ["axfeat/fatfs", "dep:axlibc"]
 ext4fs = ["axfeat/ext4fs", "dep:axlibc"]
 
 # Signal

@@ -1,5 +1,5 @@
 use crate::{ctypes, utils::e};
-use arceos_posix_api::{sys_close, sys_dup, sys_dup2, sys_fcntl};
+use arceos_posix_api::{sys_close, sys_dup, sys_dup2, sys_dup3, sys_fcntl};
 use axerrno::LinuxError;
 use core::ffi::c_int;
 

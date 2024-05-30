@@ -36,7 +36,7 @@
 extern crate alloc;
 
 #[path = "."]
-mod ctypes {
+pub mod ctypes {
     #[rustfmt::skip]
     #[path = "libctypes_gen.rs"]
     #[allow(dead_code, non_snake_case, non_camel_case_types, non_upper_case_globals, clippy::upper_case_acronyms)]

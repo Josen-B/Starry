@@ -7,6 +7,7 @@ use alloc::sync::Arc;
 use alloc::vec;
 use axerrno::AxError;
 use axfs::api::{FileIOType, OpenFlags, SeekFrom};
+use axlibc::ctypes;
 
 use axlog::{debug, info};
 use axprocess::current_process;
@@ -299,15 +300,6 @@ pub fn syscall_dup(args: [usize; 6]) -> SyscallResult {
 /// 返回值:成功执行,返回新的文件描述符。失败,返回-1。
 #[cfg(target_arch = "x86_64")]
 pub fn syscall_dup2(args: [usize; 6]) -> SyscallResult {
-    syscall_dup3(args)
-}
-
-/// 功能:复制文件描述符,并指定了新的文件描述符；
-/// # Arguments
-/// * fd: usize, 原文件所在的文件描述符
-/// * new_fd: usize, 新的文件描述符
-/// 返回值:成功执行,返回新的文件描述符。失败,返回-1。
-pub fn syscall_dup3(args: [usize; 6]) -> SyscallResult {
     let fd = args[0];
     let new_fd = args[1];
     let process = current_process();
@@ -333,9 +325,50 @@ pub fn syscall_dup3(args: [usize; 6]) -> SyscallResult {
     //     debug!("new_fd {} is already opened", new_fd);
     //     return ErrorNo::EINVAL as isize;
     // }
-    info!("dup3 fd {} to new fd {}", fd, new_fd);
+    info!("dup2 fd {} to new fd {}", fd, new_fd);
     // 就算new_fd已经被打开了,也可以被重新替代掉
     fd_table[new_fd] = fd_table[fd].clone();
+    Ok(new_fd as isize)
+}
+
+/// 功能:复制文件描述符,并指定了新的文件描述符；
+/// # Arguments
+/// * fd: usize, 原文件所在的文件描述符
+/// * new_fd: usize, 新的文件描述符
+/// * flags: usize, 文件描述符标志
+/// 返回值:成功执行,返回新的文件描述符。失败,返回-1。
+pub fn syscall_dup3(args: [usize; 6]) -> SyscallResult {
+    let fd = args[0];
+    let new_fd = args[1];
+    let flags = args[2];
+    let process = current_process();
+    let mut fd_table = process.fd_manager.fd_table.lock();
+    if fd >= fd_table.len() {
+        debug!("fd {} is out of range", fd);
+        return Err(SyscallError::EPERM);
+    }
+    if fd_table[fd].is_none() {
+        debug!("fd {} is not opened", fd);
+        return Err(SyscallError::EPERM);
+    }
+    if fd == new_fd {
+        debug!("oldfd is equal to newfd");
+        return Err(SyscallError::EINVAL);
+    }
+    if new_fd >= fd_table.len() {
+        if new_fd >= (process.fd_manager.get_limit() as usize) {
+            // 超出了资源限制
+            return Err(SyscallError::EBADF);
+        }
+        for _i in fd_table.len()..new_fd + 1 {
+            fd_table.push(None);
+        }
+    }
+    info!("dup3 fd {} to new fd {} with flags {}", fd, new_fd, flags);
+    fd_table[new_fd] = fd_table[fd].clone();
+    if flags as u32 & ctypes::O_CLOEXEC != 0 {
+        fd_table[new_fd].as_mut().unwrap().set_close_on_exec(true);
+    }
     Ok(new_fd as isize)
 }
 

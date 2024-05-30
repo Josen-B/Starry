@@ -100,6 +100,39 @@ pub fn sys_dup2(old_fd: c_int, new_fd: c_int) -> c_int {
     })
 }
 
+/// Duplicate a file descriptor.
+pub fn sys_dup3(old_fd: c_int, new_fd: c_int, flags: c_int) -> c_int {
+    debug!(
+        "sys_dup3 <= old_fd: {}, new_fd: {}, flags: {}",
+        old_fd, new_fd, flags
+    );
+    syscall_body!(sys_dup3, {
+        if old_fd == new_fd {
+            let r = sys_fcntl(old_fd, ctypes::F_GETFD as _, 0);
+            if r >= 0 {
+                return Ok(old_fd);
+            } else {
+                return Ok(r);
+            }
+        }
+        if new_fd as usize >= AX_FILE_LIMIT {
+            return Err(LinuxError::EBADF);
+        }
+
+        let f = get_file_like(old_fd)?;
+        FD_TABLE
+            .write()
+            .add_at(new_fd as usize, f)
+            .ok_or(LinuxError::EMFILE)?;
+
+        if (flags & (ctypes::O_CLOEXEC as c_int)) != 0 {
+            let res = sys_fcntl(new_fd, ctypes::F_SETFD as _, ctypes::FD_CLOEXEC as _);
+        }
+
+        Ok(new_fd)
+    })
+}
+
 /// Manipulate file descriptor.
 ///
 /// TODO: `SET/GET` command is ignored, hard-code stdin/stdout
