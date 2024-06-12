@@ -550,6 +550,7 @@ dependencies = [
  "axprocess",
  "axruntime",
  "axsignal",
+ "axstd",
  "axsync",
  "axtask",
  "bitflags 2.4.0",
